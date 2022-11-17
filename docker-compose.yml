@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  s4h:
+    image: debian:11
+    platform: linux/x86_64
+    volumes:
+      - .:/home/app
+    working_dir: /home/app
+    command: bash -c "sleep infinity"
