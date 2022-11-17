@@ -2,8 +2,8 @@
 #shellcheck disable=SC2004,SC2016
 
 assert() {
-  expected="$1"
-  input="$2"
+  input="$1"
+  expected="$2"
 
   ./s4h.sh "$input" >tmp.sh
   chmod +x tmp.sh
@@ -18,6 +18,11 @@ assert() {
   fi
 }
 
-assert 0 '0'
-assert 42 '42'
+assert '0' '0'
+assert '4' '4'
+assert '1+1' '2'
+assert '1-1' '0'
+assert '1 + 1 + 1' '3'
+assert '1 + 1 + 1' '3'
+assert '1 + 5 - 2' '4'
 echo "OK"
