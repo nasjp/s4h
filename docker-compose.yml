@@ -1,7 +1,8 @@
 version: "3.9"
 services:
   s4h:
-    image: debian:11
+    build: .
+    image: s4h:1.0.0
     platform: linux/x86_64
     volumes:
       - .:/home/app

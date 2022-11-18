@@ -1,14 +1,13 @@
-#!/bin/sh
-#shellcheck disable=SC2004,SC2016
+#!/usr/bin/env bash
 
 assert() {
-  input="$1"
-  expected="$2"
+  local input="$1"
+  local expected="$2"
 
   ./s4h.sh "$input" >tmp.sh
   chmod +x tmp.sh
-  ./tmp.sh >tmp.out
-  actual=$(cat tmp.out)
+  ./tmp.sh
+  local actual="$?"
 
   if [ "$actual" = "$expected" ]; then
     echo "$input => $actual"
@@ -25,4 +24,6 @@ assert '1-1' '0'
 assert '1 + 1 + 1' '3'
 assert '1 + 1 + 1' '3'
 assert '1 + 5 - 2' '4'
+assert '18 * 5 / 2 - 1' '44'
+assert '18 * 5 / (2 - 1)' '90'
 echo "OK"
