@@ -4,7 +4,7 @@ assert() {
   local input="$1"
   local expected="$2"
 
-  ./s4h.sh "$input" >tmp.sh
+  ./shto.sh "$input" >tmp.sh
   chmod +x tmp.sh
   ./tmp.sh
   local actual="$?"

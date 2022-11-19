@@ -52,12 +52,12 @@ tokenize() {
     local cur=''
     for ((i = 0; i < ${#1}; i++)); do
       if is_number "${1:i:1}"; then
-        cur=$cur${1:i:1}
+        cur="$cur${1:i:1}"
         continue
       fi
       break
     done
-    printf $cur
+    printf "$cur"
   }
 
   append_token() {

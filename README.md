@@ -1,3 +1,3 @@
-# s4h
+# shto.sh
 
-[![test](https://github.com/nasjp/s4h/actions/workflows/test.yaml/badge.svg)](https://github.com/nasjp/s4h/actions/workflows/test.yaml)
+[![test](https://github.com/nasjp/shto.sh/actions/workflows/test.yaml/badge.svg)](https://github.com/nasjp/shto.sh/actions/workflows/test.yaml)
