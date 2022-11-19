@@ -75,51 +75,50 @@ tokenize() {
     token_loc+=("$3")
   }
 
-  local LC_ALL=C.UTF-8
+  scan() {
+    local LC_ALL=C.UTF-8
+    local i=0
+    for ((i = 0; i < ${#input}; i++)); do
+      local char="${input:i:1}"
+      local rest="${input:i}"
 
-  local n=0
-  local len=0
-
-  local i=0
-  local rest=''
-  local char=''
-  for ((i = 0; i < ${#input}; i++)); do
-    rest="${input:i}"
-    char="${input:i:1}"
-
-    if is_space "$char"; then
-      continue
-    fi
-
-    symbols=('-' '+' '*' '/' '(' ')')
-    match=1
-    for symbol in "${symbols[@]}"; do
-      if starts_with "$char" "$symbol"; then
-        append_token "$char" 'TOKEN::RESERVED' "$i"
-        match=0
-        break
+      if is_space "$char"; then
+        continue
       fi
+
+      local symbols=('-' '+' '*' '/' '(' ')')
+      local match=1
+      for symbol in "${symbols[@]}"; do
+        if starts_with "$char" "$symbol"; then
+          append_token "$char" 'TOKEN::RESERVED' "$i"
+          match=0
+          break
+        fi
+      done
+      if [ $match -eq 0 ]; then
+        continue
+      fi
+
+      if is_number "$char"; then
+        local n
+        n=$(read_num "$rest")
+        append_token "$n" 'TOKEN::NUMBER--' "$i"
+        local len=${#n}
+        i=$((i + len - 1))
+        continue
+      fi
+
+      error_at "$i" '(tokenize) invalid charactor'
     done
-    if [ $match -eq 0 ]; then
-      continue
+
+    if [ $i -eq 0 ]; then
+      error '(tokenize) empty input'
     fi
 
-    if is_number "$char"; then
-      n=$(read_num "$rest")
-      append_token "$n" 'TOKEN::NUMBER--' "$i"
-      len=${#n}
-      i=$((i + len - 1))
-      continue
-    fi
+    return 0
+  }
 
-    error_at "$i" '(tokenize) invalid charactor'
-  done
-
-  if [ $i -eq 0 ]; then
-    error '(tokenize) empty input'
-  fi
-
-  return 0
+  scan
 }
 
 ######### parser
@@ -255,25 +254,21 @@ exit "'
   }
 
   gen() {
-    local out=""
-    local left=0
-    local right=0
-    local i=0
     if [ "${node_kinds[$1]}" == "NODE::NUMBER" ]; then
-      out="${node_vals[$1]}"
-      printf "%s" "$out"
+      printf "%s" "${node_vals[$1]}"
       return 0
     fi
 
-    op_kinds=('NODE::ADD' 'NODE::SUB' 'NODE::MUL' 'NODE::DIV')
-    ops=('+' '-' '*' '/')
+    local op_kinds=('NODE::ADD' 'NODE::SUB' 'NODE::MUL' 'NODE::DIV')
+    local ops=('+' '-' '*' '/')
+    local i=0
     for ((i = 0; i < ${#op_kinds[@]}; i++)); do
       if [ "${node_kinds[$1]}" == "${op_kinds[$i]}" ]; then
+        local left
         left=$(gen "${node_lhs[$1]}")
+        local right
         right=$(gen "${node_rhs[$1]}")
-
-        out="\$(($left ${ops[$i]} $right))"
-        printf "%s" "$out"
+        printf "%s" "\$(($left ${ops[$i]} $right))"
         return 0
       fi
     done
