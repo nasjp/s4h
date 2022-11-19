@@ -8,7 +8,7 @@ input=$*
 
 error() {
   printf "===============error===============\n" >&2
-  printf "%s " $1 >&2
+  printf "%s " "$1" >&2
   printf '\n' >&2
   printf "===============error===============\n" >&2
   exit 1
@@ -16,12 +16,12 @@ error() {
 
 error_at() {
   printf '===============error===============\n' >&2
-  printf "$input\n" >&2
+  printf "%s\n" "$input" >&2
   for ((i = 0; i < $1; i++)); do
     printf ' ' >&2
   done
   printf '^\n' >&2
-  printf "%s " $2 >&2
+  printf "%s " "$2" >&2
   printf '\n' >&2
   printf "===============error===============\n" >&2
   exit 1
@@ -35,7 +35,7 @@ token_loc=()
 
 tokenize() {
   is_space() {
-    if [[ "$1" = *[[:space:]]* ]]; then
+    if [[ "$1" =~ ^[[:space:]]$ ]]; then
       return 0
     fi
     return 1
@@ -66,7 +66,7 @@ tokenize() {
       fi
       break
     done
-    printf "$cur"
+    printf "%s" "$cur"
   }
 
   append_token() {
@@ -95,7 +95,7 @@ tokenize() {
     match=1
     for symbol in "${symbols[@]}"; do
       if starts_with "$char" "$symbol"; then
-        append_token "$char" 'TOKEN::RESERVED' $i
+        append_token "$char" 'TOKEN::RESERVED' "$i"
         match=0
         break
       fi
@@ -106,7 +106,7 @@ tokenize() {
 
     if is_number "$char"; then
       n=$(read_num "$rest")
-      append_token "$n" 'TOKEN::NUMBER--' $i
+      append_token "$n" 'TOKEN::NUMBER--' "$i"
       len=${#n}
       i=$((i + len - 1))
       continue
@@ -133,7 +133,7 @@ token_i=0
 
 parse() {
   token_val() {
-    printf "${token_vals[$token_i]}"
+    printf "%s" "${token_vals[$token_i]}"
   }
 
   equal_val() {
@@ -144,10 +144,10 @@ parse() {
   }
 
   expect_val() {
-    if equal_val $1; then
+    if equal_val "$1"; then
       return 0
     fi
-    error_at ${token_loc[$token_i]} "(parse) expected '$1'"
+    error_at "${token_loc[$token_i]}" "(parse) expected '$1'"
   }
 
   equal_kind() {
@@ -158,34 +158,34 @@ parse() {
   }
 
   next_token() {
-    token_i=$(($token_i + 1))
+    token_i=$((token_i + 1))
   }
 
   append_node() {
-    node_i=$(($node_i + 1))
+    node_i=$((node_i + 1))
 
-    node_kinds+=($1)
+    node_kinds+=("$1")
     node_vals+=("$2")
-    node_lhs+=($3)
-    node_rhs+=($4)
+    node_lhs+=("$3")
+    node_rhs+=("$4")
   }
 
   primary() {
     if equal_val '('; then
       next_token
-      expr
+      _expr
       expect_val ')'
       next_token
       return
     fi
 
     if equal_kind 'TOKEN::NUMBER--'; then
-      append_node 'NODE::NUMBER' $(token_val $token_i) '_' '_'
+      append_node 'NODE::NUMBER' "$(token_val "$token_i")" '_' '_'
       next_token
       return
     fi
 
-    error_at ${token_loc[$token_i]} '(parse) invalid node structure'
+    error_at "${token_loc[$token_i]}" '(parse) invalid node structure'
   }
 
   mul() {
@@ -213,7 +213,7 @@ parse() {
     done
   }
 
-  expr() {
+  _expr() {
     mul
     local node_lhs_i=0
 
@@ -238,7 +238,7 @@ parse() {
     done
   }
 
-  expr
+  _expr
 }
 
 generate() {
@@ -261,7 +261,7 @@ exit "'
     local i=0
     if [ "${node_kinds[$1]}" == "NODE::NUMBER" ]; then
       out="${node_vals[$1]}"
-      printf "$out"
+      printf "%s" "$out"
       return 0
     fi
 
@@ -273,7 +273,7 @@ exit "'
         right=$(gen "${node_rhs[$1]}")
 
         out="\$(($left ${ops[$i]} $right))"
-        printf "$out"
+        printf "%s" "$out"
         return 0
       fi
     done
