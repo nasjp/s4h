@@ -263,7 +263,7 @@ exit "'
   }
 
   epilogue() {
-    printf '"'
+    printf '"\n'
   }
 
   gen() {
@@ -322,11 +322,8 @@ exit "'
 
 run() {
   tokenize
-
   parse
-
   generate
-  printf "\n"
 }
 
 run
