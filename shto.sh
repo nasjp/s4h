@@ -6,15 +6,24 @@ set -eu
 
 input=$*
 
+error() {
+  printf "===============error===============\n" >&2
+  printf "%s " $1 >&2
+  printf '\n' >&2
+  printf "===============error===============\n" >&2
+  exit 1
+}
+
 error_at() {
-  printf 'error!!!\n'
-  printf "$input\n"
+  printf '===============error===============\n' >&2
+  printf "$input\n" >&2
   for ((i = 0; i < $1; i++)); do
-    printf ' '
+    printf ' ' >&2
   done
-  printf '^\n'
-  printf "%s " $2
-  printf '\n'
+  printf '^\n' >&2
+  printf "%s " $2 >&2
+  printf '\n' >&2
+  printf "===============error===============\n" >&2
   exit 1
 }
 
@@ -115,8 +124,12 @@ tokenize() {
       continue
     fi
 
-    error_at "$i" '(tokenize)invalid charactor'
+    error_at "$i" '(tokenize) invalid charactor'
   done
+
+  if [ $i -eq 0 ]; then
+    error '(tokenize) empty input'
+  fi
 
   return 0
 }
@@ -184,7 +197,7 @@ parse() {
       return
     fi
 
-    error_at ${cur[1]} '(parse)invalid node structure'
+    error_at ${token_loc[${token_i}]} '(parse) invalid node structure'
   }
 
   mul() {
@@ -298,6 +311,8 @@ exit "'
       printf "$out"
       return 0
     fi
+
+    error "(generate) unexpected node kind ${node_kinds[$1]}"
   }
 
   prologue
