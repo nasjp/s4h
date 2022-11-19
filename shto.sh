@@ -87,26 +87,26 @@ tokenize() {
     rest="${input:i}"
     char="${input:i:1}"
 
-    if is_space "${char}"; then
+    if is_space "$char"; then
       continue
     fi
 
     symbols=('-' '+' '*' '/' '(' ')')
     match=1
     for symbol in "${symbols[@]}"; do
-      if starts_with "${char}" "${symbol}"; then
-        append_token "${char}" 'TOKEN::RESERVED' $i
+      if starts_with "$char" "$symbol"; then
+        append_token "$char" 'TOKEN::RESERVED' $i
         match=0
         break
       fi
     done
-    if [ ${match} -eq 0 ]; then
+    if [ $match -eq 0 ]; then
       continue
     fi
 
-    if is_number "${char}"; then
-      n=$(read_num "${rest}")
-      append_token "${n}" 'TOKEN::NUMBER--' $i
+    if is_number "$char"; then
+      n=$(read_num "$rest")
+      append_token "$n" 'TOKEN::NUMBER--' $i
       len=${#n}
       i=$((i + len - 1))
       continue
@@ -133,11 +133,11 @@ token_i=0
 
 parse() {
   token_val() {
-    printf "${token_vals[${token_i}]}"
+    printf "${token_vals[$token_i]}"
   }
 
   equal_val() {
-    if [ ${token_i} -lt ${#token_vals[@]} ] && [ "${token_vals[${token_i}]}" == "$1" ]; then
+    if [ $token_i -lt ${#token_vals[@]} ] && [ "${token_vals[$token_i]}" == "$1" ]; then
       return 0
     fi
     return 1
@@ -147,11 +147,11 @@ parse() {
     if equal_val $1; then
       return 0
     fi
-    error_at ${token_loc[${token_i}]} "(parse) expected '$1'"
+    error_at ${token_loc[$token_i]} "(parse) expected '$1'"
   }
 
   equal_kind() {
-    if [ ${token_i} -lt ${#token_kinds[@]} ] && [ "${token_kinds[${token_i}]}" == "$1" ]; then
+    if [ $token_i -lt ${#token_kinds[@]} ] && [ "${token_kinds[$token_i]}" == "$1" ]; then
       return 0
     fi
     return 1
@@ -180,12 +180,12 @@ parse() {
     fi
 
     if equal_kind 'TOKEN::NUMBER--'; then
-      append_node 'NODE::NUMBER' $(token_val ${token_i}) '_' '_'
+      append_node 'NODE::NUMBER' $(token_val $token_i) '_' '_'
       next_token
       return
     fi
 
-    error_at ${token_loc[${token_i}]} '(parse) invalid node structure'
+    error_at ${token_loc[$token_i]} '(parse) invalid node structure'
   }
 
   mul() {
@@ -195,17 +195,17 @@ parse() {
     for (( ; ; )); do
       if equal_val '*'; then
         next_token
-        node_lhs_i=${node_i}
+        node_lhs_i=$node_i
         primary
-        append_node 'NODE::MUL' '_' ${node_lhs_i} ${node_i}
+        append_node 'NODE::MUL' '_' $node_lhs_i $node_i
         continue
       fi
 
       if equal_val '/'; then
         next_token
-        node_lhs_i=${node_i}
+        node_lhs_i=$node_i
         primary
-        append_node 'NODE::DIV' '_' ${node_lhs_i} ${node_i}
+        append_node 'NODE::DIV' '_' $node_lhs_i $node_i
         continue
       fi
 
@@ -220,17 +220,17 @@ parse() {
     for (( ; ; )); do
       if equal_val '+'; then
         next_token
-        node_lhs_i=${node_i}
+        node_lhs_i=$node_i
         mul
-        append_node 'NODE::ADD' '_' ${node_lhs_i} ${node_i}
+        append_node 'NODE::ADD' '_' $node_lhs_i $node_i
         continue
       fi
 
       if equal_val '-'; then
         next_token
-        node_lhs_i=${node_i}
+        node_lhs_i=$node_i
         mul
-        append_node 'NODE::SUB' '_' ${node_lhs_i} ${node_i}
+        append_node 'NODE::SUB' '_' $node_lhs_i $node_i
         continue
       fi
 
@@ -282,7 +282,7 @@ exit "'
   }
 
   prologue
-  gen ${node_i}
+  gen $node_i
   epilogue
 }
 
