@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
-# REMOTE="false"
-
-source="$(cat shto.sh)"
-
-printf "REMOTE: %s\n" "${REMOTE:-false}"
-
-if [ "$REMOTE" == "true" ]; then
-  source="$(curl -fsSL https://raw.githubusercontent.com/nasjp/shto.sh/main/shto.sh)"
-fi
+[ "$REMOTE" == "true" ] && source="$(curl -fsSL https://raw.githubusercontent.com/nasjp/shto.sh/main/shto.sh)" || source="$(cat shto.sh)"
 
 case_number=0
 fail=1
@@ -29,7 +21,9 @@ assert() {
   fi
 }
 
-printf "======================  test  ======================\n\n"
+printf "======================  test  ======================\n"
+printf "REMOTE: %s\n\n" "${REMOTE:-false}"
+
 assert '0' '0'
 assert '4' '4'
 assert '1+1' '2'
@@ -41,6 +35,7 @@ assert '18 * 5 / 2 - 1' '44'
 assert '18 * 5 / (2 - 1)' '90'
 assert '(18 * 5 / (2 - 1))' '90'
 printf "\n"
+
 if [ $fail -eq 0 ]; then
   printf "======================  FAIL  ======================\n"
   exit 1
