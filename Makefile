@@ -1,12 +1,15 @@
 SRCS=$(wildcard *.sh)
 
 test:
-	./test.sh
+	@bash test.sh
+
+remotetest:
+	@REMOTE=true bash test.sh
 
 lint:
-	shellcheck ${SRCS}
+	@shellcheck ${SRCS}
 
 clean:
-	rm -f tmp.out tmp.sh
+	@rm -f tmp.out tmp.sh
 
 .PHONY: test lint clean

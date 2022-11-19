@@ -1,22 +1,34 @@
 #!/usr/bin/env bash
 
+# REMOTE="false"
+
+source="$(cat shto.sh)"
+
+printf "REMOTE: %s\n" "${REMOTE:-false}"
+
+if [ "$REMOTE" == "true" ]; then
+  source="$(curl -fsSL https://raw.githubusercontent.com/nasjp/shto.sh/main/shto.sh)"
+fi
+
+case_number=0
+
 assert() {
   local input="$1"
   local expected="$2"
+  case_number=$((case_number + 1))
 
-  ./shto.sh "$input" >tmp.sh
-  chmod +x tmp.sh
-  ./tmp.sh
+  bash <(bash <(printf "%s" "$source") "$input")
   local actual="$?"
 
   if [ "$actual" = "$expected" ]; then
-    echo "$input => $actual"
+    printf "%03d) %s => %s\n" "$case_number" "$input" "$actual"
   else
-    echo "$input => $expected expected, but got $actual"
+    printf "%03d) %s => %s expected, but got %s\n" "$case_number" "$input" "$expected" "$actual"
     exit 1
   fi
 }
 
+printf "========================test========================\n"
 assert '0' '0'
 assert '4' '4'
 assert '1+1' '2'
@@ -27,4 +39,5 @@ assert '1 + 5 - 2' '4'
 assert '18 * 5 / 2 - 1' '44'
 assert '18 * 5 / (2 - 1)' '90'
 assert '(18 * 5 / (2 - 1))' '90'
-echo "OK"
+printf "========================test========================\n"
+printf "OK\n"
