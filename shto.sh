@@ -81,44 +81,32 @@ tokenize() {
   local len=0
 
   local i=0
+  local rest=''
+  local char=''
   for ((i = 0; i < ${#input}; i++)); do
-    if is_space "${input:i:1}"; then
+    rest="${input:i}"
+    char="${input:i:1}"
+
+    if is_space "${char}"; then
       continue
     fi
 
-    if starts_with "${input:i}" '-'; then
-      append_token "${input:i:1}" 'TOKEN::RESERVED' $i
+    symbols=('-' '+' '*' '/' '(' ')')
+    match=1
+    for symbol in "${symbols[@]}"; do
+      if starts_with "${char}" "${symbol}"; then
+        append_token "${char}" 'TOKEN::RESERVED' $i
+        match=0
+        break
+      fi
+    done
+    if [ ${match} -eq 0 ]; then
       continue
     fi
 
-    if starts_with "${input:i}" '+'; then
-      append_token "${input:i:1}" 'TOKEN::RESERVED' $i
-      continue
-    fi
-
-    if starts_with "${input:i}" '*'; then
-      append_token "${input:i:1}" 'TOKEN::RESERVED' $i
-      continue
-    fi
-
-    if starts_with "${input:i}" '/'; then
-      append_token "${input:i:1}" 'TOKEN::RESERVED' $i
-      continue
-    fi
-
-    if starts_with "${input:i}" '('; then
-      append_token "${input:i:1}" 'TOKEN::RESERVED' $i
-      continue
-    fi
-
-    if starts_with "${input:i}" ')'; then
-      append_token "${input:i}" 'TOKEN::RESERVED' $i
-      continue
-    fi
-
-    if is_number "${input:i:1}"; then
-      n=$(read_num "${input:i}")
-      append_token $n 'TOKEN::NUMBER--' $i
+    if is_number "${char}"; then
+      n=$(read_num "${rest}")
+      append_token "${n}" 'TOKEN::NUMBER--' $i
       len=${#n}
       i=$((i + len - 1))
       continue
@@ -159,7 +147,7 @@ parse() {
     if equal_val $1; then
       return 0
     fi
-    error_at ${token_loc[${token_i}]} "expected '$1'"
+    error_at ${token_loc[${token_i}]} "(parse) expected '$1'"
   }
 
   equal_kind() {
@@ -270,47 +258,25 @@ exit "'
     local out=""
     local left=0
     local right=0
+    local i=0
     if [ "${node_kinds[$1]}" == "NODE::NUMBER" ]; then
       out="${node_vals[$1]}"
       printf "$out"
       return 0
     fi
 
-    if [ "${node_kinds[$1]}" == "NODE::ADD" ]; then
-      left=$(gen "${node_lhs[$1]}")
-      right=$(gen "${node_rhs[$1]}")
+    op_kinds=('NODE::ADD' 'NODE::SUB' 'NODE::MUL' 'NODE::DIV')
+    ops=('+' '-' '*' '/')
+    for ((i = 0; i < ${#op_kinds[@]}; i++)); do
+      if [ "${node_kinds[$1]}" == "${op_kinds[$i]}" ]; then
+        left=$(gen "${node_lhs[$1]}")
+        right=$(gen "${node_rhs[$1]}")
 
-      out="\$(($left + $right))"
-      printf "$out"
-      return 0
-    fi
-
-    if [ "${node_kinds[$1]}" == "NODE::SUB" ]; then
-      left=$(gen "${node_lhs[$1]}")
-      right=$(gen "${node_rhs[$1]}")
-
-      out="\$(($left - $right))"
-      printf "$out"
-      return 0
-    fi
-
-    if [ "${node_kinds[$1]}" == "NODE::DIV" ]; then
-      left=$(gen "${node_lhs[$1]}")
-      right=$(gen "${node_rhs[$1]}")
-
-      out="\$(($left / $right))"
-      printf "$out"
-      return 0
-    fi
-
-    if [ "${node_kinds[$1]}" == "NODE::MUL" ]; then
-      left=$(gen "${node_lhs[$1]}")
-      right=$(gen "${node_rhs[$1]}")
-
-      out="\$(($left * $right))"
-      printf "$out"
-      return 0
-    fi
+        out="\$(($left ${ops[$i]} $right))"
+        printf "$out"
+        return 0
+      fi
+    done
 
     error "(generate) unexpected node kind ${node_kinds[$1]}"
   }
