@@ -11,6 +11,7 @@ if [ "$REMOTE" == "true" ]; then
 fi
 
 case_number=0
+fail=1
 
 assert() {
   local input="$1"
@@ -21,14 +22,14 @@ assert() {
   local actual="$?"
 
   if [ "$actual" = "$expected" ]; then
-    printf "%03d) %s => %s\n" "$case_number" "$input" "$actual"
+    printf "%03d - OK   ) '%s' => '%s'\n" "$case_number" "$input" "$actual"
   else
-    printf "%03d) %s => %s expected, but got %s\n" "$case_number" "$input" "$expected" "$actual"
-    exit 1
+    printf "%03d - FAIL ) '%s' => '%s' expected, but got '%s'\n" "$case_number" "$input" "$expected" "$actual"
+    fail=0
   fi
 }
 
-printf "========================test========================\n"
+printf "======================  test  ======================\n\n"
 assert '0' '0'
 assert '4' '4'
 assert '1+1' '2'
@@ -39,5 +40,10 @@ assert '1 + 5 - 2' '4'
 assert '18 * 5 / 2 - 1' '44'
 assert '18 * 5 / (2 - 1)' '90'
 assert '(18 * 5 / (2 - 1))' '90'
-printf "========================test========================\n"
-printf "OK\n"
+printf "\n"
+if [ $fail -eq 0 ]; then
+  printf "======================  FAIL  ======================\n"
+  exit 1
+else
+  printf "======================   OK   ======================\n"
+fi
